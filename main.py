@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
 # --- Model Loading ---
-model_path = os.path.join(os.path.dirname(_file_), 'models', 'model.h5')
+model_path = os.path.join(os.path.dirname(__file__), 'models', 'model.h5')
 os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
 file_id = '1p1_6z6hCCJRXsZSmu8KtCjMChztIjjao'
