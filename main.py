@@ -3,14 +3,15 @@ from keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.models import load_model
 import numpy as np
 import os
-import gdown  
-app = Flask(__name__)
+import gdown
+
+app = Flask(_name_)
 app.secret_key = 'your_secret_key_here'
 
-model_path = os.path.join(os.path.dirname(__file__), 'models', 'model.h5')
+# --- Model Loading ---
+model_path = os.path.join(os.path.dirname(_file_), 'models', 'model.h5')
 os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
-# Replace with your actual Google Drive file ID
 file_id = '1p1_6z6hCCJRXsZSmu8KtCjMChztIjjao'
 url = f'https://drive.google.com/uc?id={file_id}'
 
@@ -18,43 +19,46 @@ if not os.path.exists(model_path):
     print("Downloading model.h5 from Google Drive...")
     gdown.download(url, model_path, quiet=False)
 
-# Load model
+# Load the model safely
+model = None
 try:
     model = load_model(model_path)
-    print("Model loaded successfully.")
+    print("✅ Model loaded successfully.")
 except Exception as e:
-    print("Error loading model:", str(e))
+    print("❌ Error loading model:", str(e))
 
-# Labels
+# --- Class Labels and Info ---
 class_labels = ['glioma', 'meningioma', 'notumor', 'pituitary']
 
-# Tumor descriptions
 tumor_info = {
     'glioma': {
-        'description': 'Gliomas are tumors that arise from glial cells in the brain or spine. They are among the most common types of primary brain tumors.',
-        'prevention': 'Avoid exposure to radiation, maintain a healthy diet, manage stress, and monitor for neurological symptoms.'
+        'description': 'Gliomas arise from glial cells in the brain/spine. They are common brain tumors.',
+        'prevention': 'Avoid radiation, manage diet and stress, monitor for symptoms.'
     },
     'meningioma': {
-        'description': 'Meningiomas are typically benign tumors that develop from the meninges, the membranes surrounding the brain and spinal cord.',
-        'prevention': 'Limit radiation exposure, maintain a healthy lifestyle, and seek regular checkups if at risk.'
+        'description': 'Meningiomas are usually benign tumors from the meninges.',
+        'prevention': 'Limit radiation exposure, stay healthy, and checkups if at risk.'
     },
     'pituitary': {
-        'description': 'Pituitary tumors develop in the pituitary gland and can affect hormone levels and bodily functions.',
-        'prevention': 'While often not preventable, early diagnosis and hormonal monitoring can help in management.'
+        'description': 'Pituitary tumors grow in the pituitary gland, affecting hormones.',
+        'prevention': 'Early diagnosis, hormonal checkups help manage them.'
     },
     'notumor': {
-        'description': 'No signs of tumor detected in the MRI scan.',
-        'prevention': 'Continue regular health checkups and maintain a brain-healthy lifestyle.'
+        'description': 'No signs of tumor in the scan.',
+        'prevention': 'Maintain a healthy lifestyle and routine health checkups.'
     }
 }
 
-# Uploads folder
+# --- Uploads Folder ---
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Prediction logic
+# --- Prediction Logic ---
 def predict_tumor(image_path):
+    if model is None:
+        raise RuntimeError("Model not loaded. Cannot perform prediction.")
+    
     IMAGE_SIZE = 128
     img = load_img(image_path, target_size=(IMAGE_SIZE, IMAGE_SIZE))
     img_array = img_to_array(img) / 255.0
@@ -72,10 +76,13 @@ def predict_tumor(image_path):
 
     return result, confidence_score, description, prevention
 
-# Flask route
+# --- Routes ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+        if model is None:
+            return render_template('index.html', result='Model failed to load. Please try again later.', confidence='', file_path='')
+
         if 'file' not in request.files or request.files['file'].filename == '':
             return render_template('index.html', result='No file selected', confidence='', file_path='')
 
@@ -86,21 +93,20 @@ def index():
             file.save(file_location)
             print("Saved file to:", file_location)
 
-            result, confidence, description, prevention = predict_tumor(file_location)
+            try:
+                result, confidence, description, prevention = predict_tumor(file_location)
+                return render_template('index.html',
+                                       result=result,
+                                       confidence=f"{confidence*100:.2f}%",
+                                       description=description,
+                                       prevention=prevention,
+                                       file_path=f'/static/uploads/{filename}')
+            except Exception as e:
+                return render_template('index.html', result=f'Prediction error: {str(e)}', confidence='', file_path='')
 
-            return render_template('index.html',
-                                   result=result,
-                                   confidence=f"{confidence*100:.2f}%",
-                                   description=description,
-                                   prevention=prevention,
-                                   file_path=f'/static/uploads/{filename}')
     return render_template('index.html', result=None)
 
-# Run app
-#if __name__ == '__main__':
-    #app.run(host='127.0.0.1', port=8080, debug=True)
-
-# Run app
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  
+# --- Run App ---
+if _name_ == '_main_':
+    port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
