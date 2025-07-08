@@ -101,6 +101,6 @@ def index():
     #app.run(host='127.0.0.1', port=8080, debug=True)
 
 # Run app
-if _name_ == '_main_':
+if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))  
     app.run(host='0.0.0.0', port=port)
