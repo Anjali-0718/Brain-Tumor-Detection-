@@ -5,7 +5,7 @@ import numpy as np
 import os
 import gdown
 
-app = Flask(_name_)
+app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
 # --- Model Loading ---
