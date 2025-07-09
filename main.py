@@ -7,7 +7,8 @@ import os
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
-model_path = os.path.join(os.path.dirname(__file__), 'models', 'model.h5')
+model_path = os.path.join(os.path.dirname(__file__), 'models', 'model_compressed.h5')
+
 try:
     model = load_model(model_path)
     print("Model loaded successfully.")
@@ -79,5 +80,4 @@ def index():
                                    file_path=f'/static/uploads/{filename}')
     return render_template('index.html', result=None)
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='127.0.0.1', port=8080, debug=True)
