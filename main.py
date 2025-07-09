@@ -3,22 +3,12 @@ from keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.models import load_model
 import numpy as np
 import os
-import gdown  
+
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
+# Load model from local path
 model_path = os.path.join(os.path.dirname(__file__), 'models', 'model.h5')
-os.makedirs(os.path.dirname(model_path), exist_ok=True)
-
-# Replace with your actual Google Drive file ID
-file_id = '1p1_6z6hCCJRXsZSmu8KtCjMChztIjjao'
-url = f'https://drive.google.com/uc?id={file_id}'
-
-if not os.path.exists(model_path):
-    print("Downloading model.h5 from Google Drive...")
-    gdown.download(url, model_path, quiet=False)
-
-# Load model
 try:
     model = load_model(model_path)
     print("Model loaded successfully.")
